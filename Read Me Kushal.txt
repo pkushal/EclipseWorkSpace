@@ -1,0 +1,8 @@
+do the ctrl+ shift and right click to open the cmd here
+git status
+git add -A
+git status
+git commit -m 'some comment'
+git push
+
+git status

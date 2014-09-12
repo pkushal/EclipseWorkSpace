@@ -1,0 +1,28 @@
+This is aka Law of Demeter or Principle of Least Knowledge
+
+We should only invoke methods that belongs to:
+
+1...the object itself
+2...objects passed in as a parameter to the method
+3...any object the method creates  or instantiates
+4...any components of the object
+
+
+public class Car{
+
+Engine engine
+//other instance variables
+
+public Car(){
+//instantiate the engine etc.
+}
+public void start(Keys keys){
+Doors doors = new Doors();
+boolean authorized = key.turns();  // 2
+
+if(authorized) {
+engine.start(); //1
+updateDashBoardDisplay(); //4
+doors.lock(); //3
+}
+}
