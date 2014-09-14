@@ -6,3 +6,10 @@ git commit -m 'some comment'
 git push
 
 git status
+
+touch README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin https://github.com/pkushal/FromWork.git
+git push -u origin master
