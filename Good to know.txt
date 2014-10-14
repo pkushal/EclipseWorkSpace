@@ -1,0 +1,1 @@
+To find the mid point, don't do (start+end)/2, do like start+(end-start)/2

@@ -1,0 +1,104 @@
+The main idea is to make the threads run simultaneously.
+
+The two ways to implement the threads in java is:
+	1. extend the Thread class
+	2. implement the runnable class and pass it to the constructor
+	   of the thread class.
+
+	3. If we just have one thread to run and we don't want to take the hassle to make all these then we can use the anonymous class and make it easy.
+
+
+Option 1:
+package demo1;
+
+class Runner extends Thread {
+
+	@Override
+	//Need to override the run method and once I do start(), it will look for the run method
+	public void run() {
+		for (int i = 0; i < 10; i++) {
+			System.out.println("hello " + i);
+		}
+		try {
+			Thread.sleep(1000); // need to surround the sleep with try and catch block
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+}
+
+public class App {
+	public static void main(String[] args) {
+		Runner runner1 = new Runner();
+		runner1.start(); // do not do runner1.run(); just start the thread
+		
+		Runner runner2 = new Runner();
+		runner2.start();
+	}
+}
+
+
+Option 2:
+
+class Runner implements Runnable {
+
+	@Override
+	public void run() {
+		for (int i = 0; i < 10; i++) {
+			System.out.println("hello " + i);
+		}
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+}
+
+public class App2 {
+	public static void main(String[] args) {
+		Thread t1 = new Thread(new Runner());
+		Thread t2 = new Thread(new Runner());
+		t1.start();
+		t2.start();
+	}
+}
+
+
+
+Option 3:
+
+/*
+ * Here we have instantiated the Thread class and passed the instance of the Runnable in the constructor.
+ * To make the instance of the Runnable we have use the anonymous class as Runnable is a interface.
+ * Finally start the thread
+ */
+public class App3 {
+	public static void main(String[] args) {
+		Thread t1 = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				for (int i = 0; i < 10; i++) {
+					System.out.println("hello " + i);
+				}
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+
+		});
+		t1.start();
+	}
+}
+
+
