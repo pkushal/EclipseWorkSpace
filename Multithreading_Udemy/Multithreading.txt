@@ -283,3 +283,415 @@ public class App_synchronized_keyword {
 IF WE ARE USING THE SYNCHRONIZED KEYWORD, THEN NO NEED TO 
 USE THE VOLATILE KEYWORD.
 VOLATILE KEYWORD WILL MAKE THE VARIABLES VISIBLE FROM ALL THREADS
+
+
+
+Multiple Locks:
+If I have a method, inside which two independent tasks are going on, and If do synchronized on the top method then it will now allow the inside inddependent processes to run.
+This is because we have only intrinsic lock.
+Solution: Create your own lock 
+
+That problem is shown below:
+
+
+public class App {
+	public static void main(String[] args) {
+		new Worker().main();
+	}
+}
+
+
+package multipleLocks;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class Worker {
+	private Random random = new Random();
+	
+	private List<Integer> list1 = new ArrayList<>();
+	private List<Integer> list2 = new ArrayList<>();
+
+	public synchronized void stageOne() {
+		try {
+			Thread.sleep(1);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		list1.add(random.nextInt(100));
+	}
+
+	public synchronized void stageTwo() {
+		try {
+			Thread.sleep(1);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		list2.add(random.nextInt(100));
+	}
+
+	public void process() {
+		for (int i = 0; i < 1000; i++) {
+			stageOne();
+			stageTwo();
+		}
+	}
+
+	public void main() {
+		System.out.println("Starting...");
+		long start = System.currentTimeMillis();
+		Thread t1 = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				process();
+			}
+
+		});
+
+		Thread t2 = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				process();
+			}
+
+		});
+		t1.start();
+		t2.start();
+		try {
+			t1.join();
+			t2.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		long end = System.currentTimeMillis();
+		System.out.println("Time taken: " + (end - start));
+		System.out.println("list 1: " + list1.size() + " List 2: "
+				+ list2.size());
+	}
+
+}
+
+
+
+SO,
+
+package multipleLocks;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class Worker {
+	private Random random = new Random();
+
+	private Object lock1 = new Object();
+	private Object lock2 = new Object();
+
+	/*
+	 * You can also lock on the actual object you want to write to like, list1 and list2 
+	 * in this case..but it is not recommended, it will give you problems and complicate things
+	 * So make a separate lock objects to avoid confusion.
+	 */
+	private List<Integer> list1 = new ArrayList<>();
+	private List<Integer> list2 = new ArrayList<>();
+
+	public void stageOne() {
+		synchronized (lock1) {
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			list1.add(random.nextInt(100));
+		}
+	}
+
+	public void stageTwo() {
+		synchronized (lock2) {
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			list2.add(random.nextInt(100));
+
+		}
+	}
+
+	public void process() {
+		for (int i = 0; i < 1000; i++) {
+			stageOne();
+			stageTwo();
+		}
+	}
+
+	public void main() {
+		System.out.println("Starting...");
+		long start = System.currentTimeMillis();
+		Thread t1 = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				process();
+			}
+
+		});
+
+		Thread t2 = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				process();
+			}
+
+		});
+		t1.start();
+		t2.start();
+		try {
+			t1.join();
+			t2.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		long end = System.currentTimeMillis();
+		System.out.println("Time taken: " + (end - start));
+		System.out.println("list 1: " + list1.size() + " List 2: "
+				+ list2.size());
+	}
+
+}
+
+
+
+Thread Pools:
+Way of managing lots of thread at the same time. Here instead of using the Thread class to individually manage the threads, we have to use the ExecutorService to manage more thread and have more control.
+
+
+package threadPool;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+class Processor implements Runnable {
+	private int id;
+	public Processor(int id) {
+		this.id = id;
+	}
+	@Override
+	public void run() {
+		System.out.println("Starting the id: " + id);
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Completed: " + id);
+	}
+}
+
+public class App {
+	public static void main(String[] args) {
+		/*Instead of using the thread class we are using the executorService class
+		Thread pool is like having number of workers in a factory.
+		When the thread complete one task they start the new task from the bunch of tasks given*/
+		
+		ExecutorService executor = Executors.newFixedThreadPool(3);
+		
+		for (int i = 0; i < 5; i++) {
+			executor.submit(new Processor(i));
+		}
+		
+		// Managerial method of the executor; stops accepting new task after completing what all the thread  are doing.
+		executor.shutdown();
+
+		System.out.println("All task submitted to the Executor and I am not accepting any more task");
+
+		try {
+			// time I want to wait for the executor to complete the given task, if not completed, it will leave the task
+			executor.awaitTermination(1, TimeUnit.DAYS);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		System.out.println("All tasks completed");
+	}
+}
+
+
+
+
+CountDown Latches:
+
+CountDownLatch is a thread safe class in java. No need to worry about the thread synchonization.
+It will let you count down from the number you specify and it lets one or more thread wait until the latch reaches the count of zero
+
+
+package countDownLatches;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+class Processor implements Runnable {
+	private CountDownLatch latch;
+
+	public Processor(CountDownLatch latch) {
+		this.latch = latch;
+	}
+
+	@Override
+	public void run() {
+		System.out.println("Started");
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		latch.countDown();
+	}
+
+}
+
+public class App {
+	public static void main(String[] args) {
+
+		CountDownLatch latch = new CountDownLatch(3);
+		ExecutorService executor = Executors.newFixedThreadPool(3);
+
+		for (int i = 0; i < 3; i++) {
+			executor.submit(new Processor(latch));
+			/*
+			 * all the threads will execute the run method and call latch.countDown() after waiting 3
+			 * seconds, which will decrement the count 3 defined in the new CountDown(3). Once the count reaches 0
+			 * then the latch.await() will be released and then do the code defined afterwards, here it will display 
+			 * completed...
+			 * 
+			 * the CountDownLatch is thread safe so we don't have to do the synchronized keyword.
+			 */
+		}
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("Completed....");
+	}
+}
+
+
+
+ProducerConsumer Pattern/Blocking Queues:
+
+package producerConsumer;
+
+import java.util.Random;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
+public class App {
+	// this is thread safe and we do not need to worry about the thread synchronization
+	// This is like a thread safe queue with good taken() and put() methods.
+	private static BlockingQueue<Integer> queue = new ArrayBlockingQueue<Integer>(
+			10);
+
+	public static void main(String[] args) throws InterruptedException {
+		Thread t1 = new Thread(new Runnable() {
+			public void run() {
+				try {
+					producer();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+		Thread t2 = new Thread(new Runnable() {
+			public void run() {
+				try {
+					consumer();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		t1.start();
+		t2.start();
+		t1.join();
+		t2.join();
+	}
+
+	private static void producer() throws InterruptedException {
+		Random random = new Random();
+		while (true) {
+			// this will generate the random number between 0 and 99
+			queue.put(random.nextInt(100));// if the queue is full, it will wait
+											// until there is some deletion.
+		}
+	}
+
+	private static void consumer() throws InterruptedException {
+		Random random = new Random();
+
+		while (true) {
+			Thread.sleep(100);
+			if (random.nextInt(10) == 0) {
+				Integer value = queue.take(); // take will wait if the queue is
+												// empty.
+				System.out.println("Taken value: " + value
+						+ " and Queue size is : " + queue.size());
+			}
+		}
+	}
+}
+
+
+
+
+Wait and notify methods:
+
+public class Processor {
+	public void produce() throws InterruptedException {
+		// synchronized on the processor Object i.e. intrinsic lock of the
+		// processor
+		synchronized (this) {
+			System.out.println("Producer Thread Running");
+			/*
+			 * This wait will wait s.t it will not consume lot of resource After
+			 * encountering the wait() method, it relinquishes the lock object
+			 * and only regain it when some other tells it to wakeup via a
+			 * notify method or notifyAll method. It can be called only in the
+			 * synchronized block
+			 */
+			wait();
+			System.out.println("Producer Resumed after the wait() method");
+		}
+	}
+
+	public void consume() throws InterruptedException {
+		System.out.println("Hi I am thread 2 running simultaneously with Thread 1");
+		Scanner scanner = new Scanner(System.in);
+		// this sleep will make sure that the produce will start first.
+		Thread.sleep(2000);
+		synchronized (this) {
+			System.out.println("Waiting for the enter key...");
+			scanner.nextLine();
+			System.out.println("Enter key pressed...");
+			// this will notify the threads locked on the same object, here the processor object
+			//but doesn't yet relinquish the control yet so after notify is called close the synchronized block
+			// no codes after that.
+			notify();
+			
+		}
+	}
+}
