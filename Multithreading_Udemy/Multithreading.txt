@@ -695,3 +695,178 @@ public class Processor {
 		}
 	}
 }
+
+
+
+Reentrant Locks:
+/*
+ * Reentrant lock is an alternative to using the synchronized keyword
+ */
+public class App {
+	public static void main(String[] args) throws InterruptedException {
+		final Runner runner = new Runner();
+		Thread t1 = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					runner.firstThread();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+		Thread t2 = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					runner.SecondThread();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
+
+		t1.start();
+		t2.start();
+		t1.join();
+		t2.join();
+		runner.finished();
+	}
+}
+
+/*
+ * This reentrant lock is alternative for the synchronized block
+ */
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Runner {
+	private int count = 0;
+	private Lock lock = new ReentrantLock();
+
+	private void increment() {
+		for (int i = 0; i < 10000; i++) {
+			count++;
+		}
+	}
+
+	public void firstThread() throws InterruptedException {
+		lock.lock();
+		/*
+		 * If there is expection in the increment() method, then it will never
+		 * be able to unlock the lock so better to surround it with try and
+		 * finally block which is confirmed to be called.
+		 */
+		try {
+			increment();
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	public void SecondThread() throws InterruptedException {
+		lock.lock();
+		try {
+			increment();
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	public void finished() {
+		System.out.println("Count is: " + count);
+	}
+
+}
+
+wait and notify in reentrant Locks:
+need to use the Condition class
+
+
+import java.util.Scanner;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Runner {
+	private int count = 0;
+	private Lock lock = new ReentrantLock();
+
+	private Condition cond = lock.newCondition();
+
+	private void increment() {
+		for (int i = 0; i < 10000; i++) {
+			count++;
+		}
+	}
+
+	public void firstThread() throws InterruptedException {
+		lock.lock();
+		System.out.println("Waiting......");
+		// await() works same as wait in the synchronized block
+		cond.await();
+		System.out.println("Cond waken up by the signal method");
+		/*
+		 * If there is exception in the increment() method, then it will never
+		 * be able to unlock the lock so better to surround it with try and
+		 * finally block which is confirmed to be called.
+		 */
+		try {
+			increment();
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	public void SecondThread() throws InterruptedException {
+		Thread.sleep(1000);
+		lock.lock();
+		System.out.println("Press the enter key...");
+		new Scanner(System.in).nextLine();
+		System.out.println("Got the enter key..");
+		
+		cond.signal();
+		
+		try {
+			increment();
+		} finally {
+			//very important to unlock the lock, if not the thread in the firstThread will not get the control to the lock
+			lock.unlock();
+		}
+	}
+
+	public void finished() {
+		System.out.println("Count is: " + count);
+	}
+
+}
+
+
+
+
+Semaphore:
+
+	public static void main(String[] args) throws InterruptedException {
+		/*
+		 * Semaphore is a object that maintains a count and we refer to the
+		 * counts as available permits of the semaphore
+		 */
+		Semaphore sem = new Semaphore(1);
+
+		sem.release(); // this will increment the permits.
+		sem.acquire();// this will decrement the permits... it will wait if
+						// there is no permit to acquire
+		/*
+		 * With permits equal to 1, the release and acquire is like lock and
+		 * unlock. The difference between lock and semaphore is that the lock
+		 * has to be released from the same thread while the semaphore can be
+		 * unlocked from any thread.
+		 * 
+		 * It is used to control the access to some resource.
+		 */
+		System.out.println("Available permits: " + sem.availablePermits());
+	}
