@@ -2,54 +2,29 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class Anagram {
-	private static Scanner in;
-	private static char[] cword;
-	private static char[] cmatch;
-
 	public static void main(String[] args) {
-		System.out.println("~~~Welcome to Anagram Tester~~~");
-		checkAnagram(getWord(), getMatch());
+		System.out.println(isAnagram("   Ku          shal", "k us h a l  "));
 	}
 
-	public static String getWord() {
-		in = new Scanner(System.in);
-		System.out.println("Enter the First word to test the anagram: ");
-		String word = in.next();
-		cword = word.toCharArray();//new char[word.length()];
-		return word;
-	}
-
-	public static String getMatch() {
-		in = new Scanner(System.in);
-		System.out.println("Enter the second word to test the anagram: ");
-		String match = in.next();
-		cmatch = match.toCharArray();//new char[match.length()];
-		return match;
-	}
-
-	public static void checkAnagram(String word, String match) {
-		if (word.length() != match.length()) {
-			System.out
-					.println("the word lengths are different..So NOT ANAGRAM ");
+	public static boolean isAnagram(String s1, String s2) {
+		String first = s1.trim().toLowerCase().replaceAll("\\s+", "");
+		String second = s2.trim().toLowerCase().replaceAll("\\s+", "");
+		System.out.println("first: " + first + " and second: " + second);
+		int array[];
+		if (first.length() == second.length()) {
+			array = new int[256];
 		} else {
-			System.out.println("Umm word lengths are also same ....");
-
-			if (Arrays.equals(getArray(cword, word), getArray(cmatch, match))) {
-				System.out.println("Anagrams :) ");
-			} else {
-				System.out.println(getArray(cword, word));
-				System.out.println(getArray(cmatch, match));
-				System.out.println("Not anagrams :(");
+			return false;
+		}
+		for (int i = 0; i < first.length(); i++) {
+			array[(int) first.charAt(i)] = 1;
+		}
+		for (int i = 0; i < second.length(); i++) {
+			if (array[(int) second.charAt(i)] != 1) {
+				return false;
 			}
 		}
+		return true;
 	}
 
-	public static char[] getArray(char carray[], String input) {
-//		for (int i = 0; i <= input.length() - 1; i++) {
-//			carray[i] = input.charAt(i);
-//
-//		}
-		Arrays.sort(carray);
-		return carray;
-	}
 }

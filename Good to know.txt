@@ -1,1 +1,14 @@
 To find the mid point, don't do (start+end)/2, do like start+(end-start)/2
+
+Do not start coding straight away... first think how you gonna solve the problem
+
+Two pointer is a good technique.
+
+To find the max in a given array of integers, use the Math.max function as 
+max = Math.max(arr[i], max);
+
+try to avoid too many if conditions
+
+ALWAYS analyse the boundary conditions.
+
+If possible go for the recursive implementation.
